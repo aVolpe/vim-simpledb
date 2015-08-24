@@ -1,6 +1,11 @@
 # vim-simpledb
 
-Vim plugin to execute postgresql or mysql commands from VIM buffer
+Vim plugin to execute postgresql or mysql commands from VIM buffer.
+
+## Fork
+
+Add the support for get all the tables with `:ShowTables`, get the columns with
+`:ShowColumns`, and get all elements with `:GetAll`.
 
 ## Installation
 
