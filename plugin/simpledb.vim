@@ -65,4 +65,56 @@ function! s:PostgresCommand(conprops, query)
   return cmdline
 endfunction
 
+
+function! s:ExecuteQuery(query)
+    let conprops = matchstr(getline(1), '--\s*\zs.*')
+    let adapter = matchlist(conprops, 'db:\(\w\+\)')
+    let conprops = substitute(conprops, "db:\\w\\+", "", "")
+
+    if len(adapter) > 1 && adapter[1] == 'mysql'
+      let cmdline = s:MySQLCommand(conprops, a:query)
+    else
+      let cmdline = s:PostgresCommand(conprops, a:query)
+    endif
+
+    silent execute '!(' . substitute(cmdline, "!", "\\\\!", "g") . ' > /tmp/vim-simpledb-result.txt) 2> /tmp/vim-simpledb-error.txt'
+    silent execute '!(cat /tmp/vim-simpledb-error.txt >> /tmp/vim-simpledb-result.txt)'
+    call s:ShowResults()
+    redraw!
+endfunction
+
+function! s:ShowTables()
+    let query =   " select table_schema || '.' || table_name as table" .
+                \ " from information_schema.tables" .
+                \ " where table_schema not in ('pg_catalog', 'information_schema')"
+    call s:ExecuteQuery(query)
+endfunction
+
+function! s:ShowColumns()
+    let name = input('Enter table: ')
+    let query = "" .
+                \ " SELECT " .
+                \ "   attrelid::regclass as table, " .
+                \ "   attnum as order," .
+                \ "   attname as name, " .
+                \ "   format_type(atttypid, atttypmod) as type".
+                \ " FROM   pg_attribute" .
+                \ " WHERE  attrelid = '" . name . "'::regclass" .
+                \ " AND    attnum > 0" .
+                \ " AND    NOT attisdropped" .
+                \ " ORDER  BY attnum"
+    call s:ExecuteQuery(query)
+endfunction
+
+function! s:GetAll()
+    let name = input('Enter table: ')
+    let query = "" .
+                \ " SELECT * ".
+                \ " FROM " . name
+    call s:ExecuteQuery(query)
+endfunction
+
+command! ShowTables    call   s:ShowTables()
+command! GetAll        call   s:GetAll()
+command! ShowColumns   call   s:ShowColumns()
 command! -range=% SimpleDBExecuteSql <line1>,<line2>call simpledb#ExecuteSql()
