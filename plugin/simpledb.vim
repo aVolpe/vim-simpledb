@@ -65,7 +65,6 @@ function! s:PostgresCommand(conprops, query)
   return cmdline
 endfunction
 
-
 function! simpledb#ExecuteQuery(query)
     let conprops = matchstr(getline(1), '--\s*\zs.*')
     let adapter = matchlist(conprops, 'db:\(\w\+\)')
@@ -79,8 +78,28 @@ function! simpledb#ExecuteQuery(query)
 
     silent execute '!(' . substitute(cmdline, "!", "\\\\!", "g") . ' > /tmp/vim-simpledb-result.txt) 2> /tmp/vim-simpledb-error.txt'
     silent execute '!(cat /tmp/vim-simpledb-error.txt >> /tmp/vim-simpledb-result.txt)'
+endfunction
+
+
+function! simpledb#ExecuteQuery(query)
+    call simpledb#ExecuteQueryWithoutBuffer(query)
     call s:ShowResults()
     redraw!
+endfunction
+
+function! simpledb#ExecuteQueryWithoutBuffer(query)
+    let conprops = matchstr(getline(1), '--\s*\zs.*')
+    let adapter = matchlist(conprops, 'db:\(\w\+\)')
+    let conprops = substitute(conprops, "db:\\w\\+", "", "")
+
+    if len(adapter) > 1 && adapter[1] == 'mysql'
+      let cmdline = s:MySQLCommand(conprops, a:query)
+    else
+      let cmdline = s:PostgresCommand(conprops, a:query)
+    endif
+
+    silent execute '!(' . substitute(cmdline, "!", "\\\\!", "g") . ' > /tmp/vim-simpledb-result.txt) 2> /tmp/vim-simpledb-error.txt'
+    silent execute '!(cat /tmp/vim-simpledb-error.txt >> /tmp/vim-simpledb-result.txt)'
 endfunction
 
 function! s:ShowTables()
