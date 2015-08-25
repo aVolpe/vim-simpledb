@@ -66,7 +66,7 @@ function! s:PostgresCommand(conprops, query)
 endfunction
 
 
-function! s:ExecuteQuery(query)
+function! simpledb#ExecuteQuery(query)
     let conprops = matchstr(getline(1), '--\s*\zs.*')
     let adapter = matchlist(conprops, 'db:\(\w\+\)')
     let conprops = substitute(conprops, "db:\\w\\+", "", "")
@@ -87,7 +87,7 @@ function! s:ShowTables()
     let query =   " select table_schema || '.' || table_name as table" .
                 \ " from information_schema.tables" .
                 \ " where table_schema not in ('pg_catalog', 'information_schema')"
-    call s:ExecuteQuery(query)
+    call simpledb#ExecuteQuery(query)
 endfunction
 
 function! s:ShowColumns()
@@ -103,7 +103,7 @@ function! s:ShowColumns()
                 \ " AND    attnum > 0" .
                 \ " AND    NOT attisdropped" .
                 \ " ORDER  BY attnum"
-    call s:ExecuteQuery(query)
+    call simpledb#ExecuteQuery(query)
 endfunction
 
 function! s:GetAll()
@@ -111,7 +111,7 @@ function! s:GetAll()
     let query = "" .
                 \ " SELECT * ".
                 \ " FROM " . name
-    call s:ExecuteQuery(query)
+    call simpledb#ExecuteQuery(query)
 endfunction
 
 command! ShowTables    call   s:ShowTables()
